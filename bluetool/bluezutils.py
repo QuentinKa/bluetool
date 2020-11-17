@@ -21,6 +21,7 @@ def find_adapter(pattern=None):
     return find_adapter_in_objects(get_managed_objects(), pattern)
 
 
+######## Part which seems related to multiple adapters ##########
 def find_adapter_in_objects(objects, pattern=None):
     bus = dbus.SystemBus()
 

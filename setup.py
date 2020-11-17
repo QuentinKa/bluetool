@@ -8,5 +8,5 @@ setup(
     author_email='aleksandr.aleksandrov@emlid.com',
     url='https://github.com/emlid/bluetool',
     packages=find_packages(),
-    install_requires=['tcpbridge', 'dbus-python', 'pygobject']
+    install_requires=['dbus-python', 'pygobject']
 )

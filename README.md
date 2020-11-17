@@ -1,3 +1,7 @@
+# Bluetool Modified
+- Python 3 compatibility
+- Lightweight (TCPBridge dependency removed)
+
 ### Bluetool
 
 A simple Python API for Bluetooth D-Bus calls. Allows easy pairing, connecting and scanning.
@@ -6,15 +10,12 @@ Also provides a TCP-to-RFCOMM socket bridge for data transfer.
 #### Dependencies
 
 - `python-dbus`
-- `tcpbridge`
 
-The package was tested with **Python 2.7**
+The package was tested with **Python 3.7**
 
 #### Installation
 
-`pip install bluetool`
-
-or clone and run `make install`
+clone and run `make install`
 
 #### Usage
 
