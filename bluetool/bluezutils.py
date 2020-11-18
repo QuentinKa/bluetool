@@ -2,7 +2,6 @@ import dbus
 
 MAX_ADAPTERS = 4
 SERVICE_NAME = "org.bluez"
-ADAPTER_INTERFACE = SERVICE_NAME + ".Adapter1"
 DEVICE_INTERFACE = SERVICE_NAME + ".Device1"
 
 
@@ -18,21 +17,24 @@ def get_managed_objects():
     return manager.GetManagedObjects()
 
 
-def find_adapter(pattern=None):
-    return find_adapter_in_objects(get_managed_objects(), pattern)
+def find_adapter(pattern=None, verbose=False):
+    return find_adapter_in_objects(get_managed_objects(), pattern, verbose)
 
 
 ######## Part which seems related to multiple adapters ##########
-def find_adapter_in_objects(objects, pattern=None):
+def find_adapter_in_objects(objects, pattern=None, verbose=False):
     bus = dbus.SystemBus()
     
     # List containing all the paths to the adapters
-    paths = []
+    paths    = []
+    adapters = []
 
     for path, ifaces in objects.items():
 
-        for i in range(MAX_ADAPTERS):
-            adapter = ifaces.get(SERVICE_NAME + ".Adapter" + str(i))
+        for i in range(1,MAX_ADAPTERS):
+            ADAPTER_INTERFACE = SERVICE_NAME + ".Adapter" + str(i)
+
+            adapter = ifaces.get(ADAPTER_INTERFACE)
             
             if adapter is None:
                 continue
@@ -40,35 +42,27 @@ def find_adapter_in_objects(objects, pattern=None):
             if not pattern or pattern == adapter["Address"] or path.endswith(pattern):
                 obj = bus.get_object(SERVICE_NAME, path)
                 paths.append(path)
+                adapters.append(dbus.Interface(obj, ADAPTER_INTERFACE))
     
-    print("Found {} bluetooth interface(s): {}".format(len(paths), paths))
+    if (verbose):
+        print("Found {} bluetooth interface(s): {}".format(len(paths), paths))
 
-    for path, ifaces in objects.items():
-        adapter = ifaces.get(ADAPTER_INTERFACE)
+    
+    if len(adapters) > 0:
+        return adapters
+    else:
+        raise BluezUtilError("Bluetooth adapter not found")
 
-        if adapter is None:
-            continue
-
-        if not pattern or pattern == adapter["Address"] or path.endswith(
-                pattern):
-            obj = bus.get_object(SERVICE_NAME, path)
-            print("Using interface {} for scanning ...".format(path))
-            return dbus.Interface(obj, ADAPTER_INTERFACE)
-
-    raise BluezUtilError("Bluetooth adapter not found")
-
-
-def find_device(device_address, adapter_pattern=None):
+def find_device(adapter, device_address, adapter_pattern=None):
     return find_device_in_objects(
-        get_managed_objects(), device_address, adapter_pattern)
+        adapter, get_managed_objects(), device_address, adapter_pattern)
 
 
-def find_device_in_objects(objects, device_address, adapter_pattern=None):
+def find_device_in_objects(adapter, objects, device_address, adapter_pattern=None):
     bus = dbus.SystemBus()
     path_prefix = ""
 
     if adapter_pattern:
-        adapter = find_adapter_in_objects(objects, adapter_pattern)
         path_prefix = adapter.object_path
 
     for path, ifaces in objects.items():
