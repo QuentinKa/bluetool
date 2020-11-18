@@ -1,5 +1,6 @@
 import dbus
 
+MAX_ADAPTERS = 4
 SERVICE_NAME = "org.bluez"
 ADAPTER_INTERFACE = SERVICE_NAME + ".Adapter1"
 DEVICE_INTERFACE = SERVICE_NAME + ".Device1"
@@ -24,6 +25,23 @@ def find_adapter(pattern=None):
 ######## Part which seems related to multiple adapters ##########
 def find_adapter_in_objects(objects, pattern=None):
     bus = dbus.SystemBus()
+    
+    # List containing all the paths to the adapters
+    paths = []
+
+    for path, ifaces in objects.items():
+
+        for i in range(MAX_ADAPTERS):
+            adapter = ifaces.get(SERVICE_NAME + ".Adapter" + str(i))
+            
+            if adapter is None:
+                continue
+            
+            if not pattern or pattern == adapter["Address"] or path.endswith(pattern):
+                obj = bus.get_object(SERVICE_NAME, path)
+                paths.append(path)
+    
+    print("Found {} bluetooth interface(s): {}".format(len(paths), paths))
 
     for path, ifaces in objects.items():
         adapter = ifaces.get(ADAPTER_INTERFACE)
@@ -34,6 +52,7 @@ def find_adapter_in_objects(objects, pattern=None):
         if not pattern or pattern == adapter["Address"] or path.endswith(
                 pattern):
             obj = bus.get_object(SERVICE_NAME, path)
+            print("Using interface {} for scanning ...".format(path))
             return dbus.Interface(obj, ADAPTER_INTERFACE)
 
     raise BluezUtilError("Bluetooth adapter not found")
