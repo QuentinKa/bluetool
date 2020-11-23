@@ -78,9 +78,7 @@ _bluetooth = Bluetooth()
 
 class Agent(dbus.service.Object):
 
-    def __init__(
-            self, client_class=None, timeout=180,
-            path="/org/bluez/my_bluetooth_agent"):
+    def __init__(self, client_class=None, timeout=180, path="/org/bluez/my_bluetooth_agent"):
         dbus.service.Object.__init__(self, dbus.SystemBus(), path)
 
         if client_class is not None:
@@ -104,15 +102,13 @@ class Agent(dbus.service.Object):
         name = name.encode("utf-8") if name else "<unknown>"
         return {"mac_address": addr, "name": name}
 
-    @dbus.service.method(
-        "org.bluez.Agent1", in_signature="os", out_signature="")
+    @dbus.service.method("org.bluez.Agent1", in_signature="os", out_signature="")
     def AuthorizeService(self, device, uuid):
         logger.info("AuthorizeService: {}, {}\n".format(device, uuid))
         dev_info = self._get_device_info(device)
         self._client.authorize_service(dev_info, str(uuid))
 
-    @dbus.service.method(
-        "org.bluez.Agent1", in_signature="o", out_signature="s")
+    @dbus.service.method("org.bluez.Agent1", in_signature="o", out_signature="s")
     def RequestPinCode(self, device):
         logger.info("RequestPinCode: {}\n".format(device))
 
@@ -130,8 +126,7 @@ class Agent(dbus.service.Object):
             logger.error("RequestPinCode: {}\n".format(error))
             raise _Rejected
 
-    @dbus.service.method(
-        "org.bluez.Agent1", in_signature="o", out_signature="u")
+    @dbus.service.method("org.bluez.Agent1", in_signature="o", out_signature="u")
     def RequestPasskey(self, device):
         logger.info("RequestPasskey: {}\n".format(device))
 
@@ -149,23 +144,20 @@ class Agent(dbus.service.Object):
 
         return dbus.UInt32(passkey)
 
-    @dbus.service.method(
-        "org.bluez.Agent1", in_signature="os", out_signature="")
+    @dbus.service.method("org.bluez.Agent1", in_signature="os", out_signature="")
     def DisplayPinCode(self, device, pincode):
         logger.info("DisplayPinCode: {}: {}\n".format(device, pincode))
         dev_info = self._get_device_info(device)
         self._client.display_pin_code(dev_info, str(pincode))
 
-    @dbus.service.method(
-        "org.bluez.Agent1", in_signature="ouq", out_signature="")
+    @dbus.service.method("org.bluez.Agent1", in_signature="ouq", out_signature="")
     def DisplayPasskey(self, device, passkey, entered):
         logger.info("DisplayPasskey: {}: {} entered {}\n".format(
             device, passkey, entered))
         dev_info = self._get_device_info(device)
         self._client.display_passkey(dev_info, str(passkey), str(entered))
 
-    @dbus.service.method(
-        "org.bluez.Agent1", in_signature="ou", out_signature="")
+    @dbus.service.method("org.bluez.Agent1", in_signature="ou", out_signature="")
     def RequestConfirmation(self, device, passkey):
         logger.info("RequestConfirmation: {}, {}\n".format(device, passkey))
 
@@ -188,8 +180,7 @@ class Agent(dbus.service.Object):
         except AssertionError:
             raise _Rejected
 
-    @dbus.service.method(
-        "org.bluez.Agent1", in_signature="o", out_signature="")
+    @dbus.service.method("org.bluez.Agent1", in_signature="o", out_signature="")
     def RequestAuthorization(self, device):
         logger.info("RequestAuthorization: {}\n".format(device))
 
@@ -215,9 +206,7 @@ class Agent(dbus.service.Object):
 
 class AgentSvr(object):
 
-    def __init__(
-            self, client_class, timeout=180, capability="KeyboardDisplay",
-            path="/org/bluez/my_bluetooth_agent"):
+    def __init__(self, client_class, timeout=180, capability="KeyboardDisplay", path="/org/bluez/my_bluetooth_agent"):
         dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
         self.client_class = client_class
         self.timeout = timeout
@@ -241,9 +230,7 @@ class AgentSvr(object):
 
     def _register(self):
         try:
-            manager = dbus.Interface(
-                self._bus.get_object("org.bluez", "/org/bluez"),
-                "org.bluez.AgentManager1")
+            manager = dbus.Interface(self._bus.get_object("org.bluez", "/org/bluez"), "org.bluez.AgentManager1")
             manager.RegisterAgent(self.path, self.capability)
             manager.RequestDefaultAgent(self.path)
         except dbus.exceptions.DBusException as error:
@@ -265,9 +252,7 @@ class AgentSvr(object):
 
     def _unregister(self):
         try:
-            manager = dbus.Interface(
-                self._bus.get_object("org.bluez", "/org/bluez"),
-                "org.bluez.AgentManager1")
+            manager = dbus.Interface(self._bus.get_object("org.bluez", "/org/bluez"), "org.bluez.AgentManager1")
             manager.UnregisterAgent(self.path)
         except dbus.exceptions.DBusException:
             pass
