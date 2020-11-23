@@ -30,12 +30,14 @@ import dbus.mainloop.glib
 
 from . import bluezutils
 
+logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
-
+logger.info("coucou")
 
 class Bluetooth():
 
     def __init__(self):
+        logger.debug("coucou")
         dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
         self._scan_thread   = None
         self._bus           = dbus.SystemBus()
