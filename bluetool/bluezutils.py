@@ -1,9 +1,11 @@
 import dbus
+import logging
 
 MAX_ADAPTERS = 4
 SERVICE_NAME = "org.bluez"
 DEVICE_INTERFACE = SERVICE_NAME + ".Device1"
 
+logger = logging.getLogger(__name__)
 
 class BluezUtilError(Exception):
     pass
@@ -42,18 +44,17 @@ def find_adapter_in_objects(objects, pattern=None, verbose=False):
                 paths.append(path)
                 adapters.append(dbus.Interface(obj, ADAPTER_INTERFACE))
     
+    logger.debug("Found {} bluetooth interface(s): {}".format(len(paths), paths))
     if (verbose):
         print("Found {} bluetooth interface(s): {}".format(len(paths), paths))
 
-    
     if len(adapters) > 0:
         return adapters
     else:
         raise BluezUtilError("Bluetooth adapter not found")
 
 def find_device(adapter, device_address, adapter_pattern=None):
-    return find_device_in_objects(
-        adapter, get_managed_objects(), device_address, adapter_pattern)
+    return find_device_in_objects(adapter, get_managed_objects(), device_address, adapter_pattern)
 
 
 def find_device_in_objects(adapter, objects, device_address, adapter_pattern=None):

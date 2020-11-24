@@ -30,18 +30,16 @@ import dbus.mainloop.glib
 
 from . import bluezutils
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO, format='%(levelname)5s %(funcName)15s() %(filename)s:%(lineno)s  %(message)s')
 logger = logging.getLogger(__name__)
-logger.info("coucou")
 
 class Bluetooth():
 
-    def __init__(self):
-        logger.debug("coucou")
+    def __init__(self, verbose=False):
         dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
         self._scan_thread   = None
         self._bus           = dbus.SystemBus()
-        self._adapters      = bluezutils.find_adapter(verbose=True)
+        self._adapters      = bluezutils.find_adapter(verbose=verbose)
 
     def start_scanning(self, timeout=10):
         if self._scan_thread is None:
@@ -97,9 +95,7 @@ class Bluetooth():
             return devices
 
         try:
-            man = dbus.Interface(
-                self._bus.get_object("org.bluez", "/"),
-                "org.freedesktop.DBus.ObjectManager")
+            man = dbus.Interface(self._bus.get_object("org.bluez", "/"), "org.freedesktop.DBus.ObjectManager")
             objects = man.GetManagedObjects()
 
             for path, interfaces in objects.items():
@@ -181,8 +177,7 @@ class Bluetooth():
     def pair(self, address, adapter_idx=0):
         try:
             device = bluezutils.find_device(self._adapters[adapter_idx], address)
-        except (bluezutils.BluezUtilError,
-                dbus.exceptions.DBusException) as error:
+        except (bluezutils.BluezUtilError, dbus.exceptions.DBusException) as error:
             logger.error(str(error) + "\n")
             return False
 
@@ -195,12 +190,13 @@ class Bluetooth():
             logger.error(str(error) + "\n")
             return False
 
-        logger.info("Successfully paired with {}".format(address))
+        logger.info("Successfully paired with {}".format(device.object_path))
         return True
 
     def connect(self, address, adapter_idx=0):
         try:
             device = bluezutils.find_device(self._adapters[adapter_idx], address)
+            logger.debug(f"device is {device.object_path}")
         except (bluezutils.BluezUtilError, dbus.exceptions.DBusException) as error:
             logger.error(str(error) + "\n")
             return False
@@ -214,7 +210,7 @@ class Bluetooth():
             logger.error(str(error) + "\n")
             return False
 
-        logger.info("Successfully connected to {}".format(address))
+        logger.info("Successfully connected to {}".format(device.object_path))
         return True
 
     def disconnect(self, address, adapter_idx=0):
@@ -256,18 +252,18 @@ class Bluetooth():
     def remove(self, address, adapter_idx=0):
         try:
             adapter = bluezutils.find_adapter()[adapter_idx]
-            dev = bluezutils.find_device(self._adapters[adapter_idx], address)
+            device = bluezutils.find_device(self._adapters[adapter_idx], address)
         except (bluezutils.BluezUtilError, dbus.exceptions.DBusException) as error:
             logger.error(str(error) + "\n")
             return False
 
         try:
-            adapter.RemoveDevice(dev.object_path)
+            adapter.RemoveDevice(device.object_path)
         except dbus.exceptions.DBusException as error:
             logger.error(str(error) + "\n")
             return False
 
-        logger.info("Successfully removed: {}".format(address))
+        logger.info("Successfully removed: {}".format(device.object_path))
         return True
 
     def set_adapter_property(self, prop, value):
