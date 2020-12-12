@@ -32,16 +32,14 @@ from . import bluezutils
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
-logger.info("coucou")
 
 class Bluetooth():
 
-    def __init__(self):
-        logger.debug("coucou")
+    def __init__(self, verbose=False):
         dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
         self._scan_thread   = None
         self._bus           = dbus.SystemBus()
-        self._adapters      = bluezutils.find_adapter(verbose=True)
+        self._adapters      = bluezutils.find_adapter(verbose=verbose)
 
     def start_scanning(self, timeout=10):
         if self._scan_thread is None:
