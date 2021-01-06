@@ -70,22 +70,22 @@ class Bluetooth():
 
         return devices
 
-    def get_available_devices(self):
-        available_devices = self._get_devices("Available")
+    def get_available_devices(self, encode=True, unique_values=False):
+        available_devices = self._get_devices("Available", encode=encode, unique_values=unique_values)
         logger.debug("Available devices: {}".format(available_devices))
         return available_devices
 
-    def get_paired_devices(self):
-        paired_devices = self._get_devices("Paired")
+    def get_paired_devices(self, encode=True, unique_values=False):
+        paired_devices = self._get_devices("Paired", encode=encode, unique_values=unique_values)
         logger.debug("Paired devices: {}".format(paired_devices))
         return paired_devices
 
-    def get_connected_devices(self):
-        connected_devices = self._get_devices("Connected")
+    def get_connected_devices(self, encode=True, unique_values=False):
+        connected_devices = self._get_devices("Connected", encode=encode, unique_values=unique_values)
         logger.debug("Connected devices: {}".format(connected_devices))
         return connected_devices
 
-    def _get_devices(self, condition):
+    def _get_devices(self, condition, encode=True, unique_values=False):
         devices = []
         conditions = ("Available", "Paired", "Connected")
 
@@ -111,12 +111,23 @@ class Bluetooth():
                         if "Name" not in dev:
                             dev["Name"] = "<unknown>"
 
-                        device = {
-                            "mac_address": dev["Address"].encode("utf-8"),
-                            "name": dev["Name"].encode("utf-8")
-                        }
+                        if encode:
+                            device = {
+                                "mac_address": dev["Address"].encode("utf-8"),
+                                "name": dev["Name"].encode("utf-8")
+                            }
+                        else:
+                            device = {
+                                "mac_address": str(dev["Address"]),
+                                "name": str(dev["Name"])
+                            }
+                            logger.debug(f"Create un-encoded device {device}")
 
-                        devices.append(device)
+                        if unique_values:
+                            logger.debug(f"Append new device: {device not in devices}")
+                            devices.append(device) if device not in devices else None
+                        else:
+                            devices.append(device)
                     else:
                         props = dbus.Interface(self._bus.get_object("org.bluez", path), "org.freedesktop.DBus.Properties")
 
@@ -127,12 +138,23 @@ class Bluetooth():
                             if "Name" not in dev:
                                 dev["Name"] = "<unknown>"
 
-                            device = {
-                                "mac_address": dev["Address"].encode("utf-8"),
-                                "name": dev["Name"].encode("utf-8")
-                            }
+                            if encode:
+                                device = {
+                                    "mac_address": dev["Address"].encode("utf-8"),
+                                    "name": dev["Name"].encode("utf-8")
+                                }
+                            else:
+                                device = {
+                                    "mac_address": str(dev["Address"]),
+                                    "name": str(dev["Name"])
+                                }
+                                logger.debug(f"Create un-encoded device {device}")
 
-                            devices.append(device)
+                            if unique_values:
+                                logger.debug(f"Add new device: {device not in devices}")
+                                devices.append(device) if device not in devices else None
+                            else:
+                                devices.append(device)
         except dbus.exceptions.DBusException as error:
             logger.error(str(error) + "\n")
 
